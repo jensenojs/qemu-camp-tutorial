@@ -77,7 +77,7 @@
     - [Accel-Sim Framework][accel-sim] — 基于 GPGPU-Sim 的加速模拟框架
     - [LeetGPU][leetgpu] — GPU 编程挑战平台（类似 LeetCode）
     - [Class Central: GPU Computing 课程索引][classcentral-gpu] — 800+ 门课程聚合搜索
-    - [XPU OJ](https://xpuoj.com/) - 国内本土化的LeetGPU，国产算力支持！
+    - [XPU OJ](https://xpuoj.com/) - 国内本土化的 LeetGPU，国产算力支持！
 
 
 [freecodecamp-cuda-video]: https://www.youtube.com/watch?v=86FAWCzIe_4
