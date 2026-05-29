@@ -8,15 +8,15 @@
 
 ## 背景介绍
 
-本人是一位的操作系统行业工作4年的开发人员，对QEMU有一定的了解，但是具体的实现细节停留在李强的《qemu kvm底层源码剖析》理论中，眼过十遍不如手过一回，希望通过训练营的学习，深入理解QEMU的实现细节，结合实践和理论，提高自己的编程能力和对qemu的理解。
+本人是一位的操作系统行业工作 4 年的开发人员，对 QEMU 有一定的了解，但是具体的实现细节停留在李强的《qemu kvm 底层源码剖析》理论中，眼过十遍不如手过一回，希望通过训练营的学习，深入理解 QEMU 的实现细节，结合实践和理论，提高自己的编程能力和对 qemu 的理解。
 
 ## 专业阶段
 
-我选择了QEMU的CPU模拟器实验方向，通过学习QEMU的源码，我理解了CPU模拟器的基本原理和实现机制。
+我选择了 QEMU 的 CPU 模拟器实验方向，通过学习 QEMU 的源码，我理解了 CPU 模拟器的基本原理和实现机制。
 ### 实验记录
 
 #### 分析测试程序
-分析当前使用的测试构建Makefile，找出其调用的qemu相关命令
+分析当前使用的测试构建 Makefile，找出其调用的 qemu 相关命令
 ``shell
 qemu-system-riscv64 -M g233 -m 2G -display none -semihosting -device loader,file=./build/tests/gevico/tcg/riscv64-softmmu/test-insn-xxx
 ``
@@ -158,7 +158,7 @@ SECTIONS
 }
 ```
 QEMU RISC-V virt 机器 的 RAM 通常映射从 0x80000000 开始，
-. = 0x80000000; 表示代码段从 0x80000000 开始，qemu 运行时会加载可执行文件test-insn-xxx的代码到该地址处，然后执行0x80000000地址的指令。
+. = 0x80000000; 表示代码段从 0x80000000 开始，qemu 运行时会加载可执行文件 test-insn-xxx 的代码到该地址处，然后执行 0x80000000 地址的指令。
 
 **内存布局**：
 ```
@@ -174,7 +174,7 @@ QEMU RISC-V virt 机器 的 RAM 通常映射从 0x80000000 开始，
            |         .bss              |  未初始化数据
 0x84000000 +---------------------------+
 ```
-当前内存布局符合start的实现
+当前内存布局符合 start 的实现
 ```assembly
 # path: crt.S
     # sp size 0x400000
@@ -211,11 +211,11 @@ int main(void)              // 程序入口 (由 crt.S 调用)
 整个测试系统的设计思路是：**不依赖任何标准库或操作系统**，构建一个最小化的 C 运行时环境，让测试程序能够在 QEMU 模拟器上独立运行！
 
 #### 2.指令模拟
-模拟一个cpu扩展指令集的过程：
-1.给对应型号添加一个指令集扩展，参考https://qemu.gevico.online/tutorial/2026/ch2/qemu-cpu-model/#6
-2.创建decode文件，然后使用script/decode_tree.py 生成对应的decode.c.inc文件，关于decodetree的解释，可参考：https://qemu.gevico.online/tutorial/2026/ch2/qemu-insn/#decodetree
+模拟一个 cpu 扩展指令集的过程：
+1.给对应型号添加一个指令集扩展，参考 https://qemu.gevico.online/tutorial/2026/ch2/qemu-cpu-model/#6
+2.创建 decode 文件，然后使用 script/decode_tree.py 生成对应的 decode.c.inc 文件，关于 decodetree 的解释，可参考：https://qemu.gevico.online/tutorial/2026/ch2/qemu-insn/#decodetree
 ```shell
-python3 ./scripts/decodetree.py target/riscv/xg233ai.decode # 在终端输出decode.c.inc内容，也可 -o 输出到文件
+python3 ./scripts/decodetree.py target/riscv/xg233ai.decode # 在终端输出 decode.c.inc 内容，也可 -o 输出到文件
 ```
 3.添加扩展对应的翻译函数
 ```c
@@ -239,11 +239,11 @@ static bool trans_sort(DisasContext *ctx, arg_sort *a) {
 }
 ```
 翻译过程有以下两种方式：
-1. 使用help模拟指令
-2. 使用IR模拟指令
-##### 1. 使用help模拟指令
+1. 使用 help 模拟指令
+2. 使用 IR 模拟指令
+##### 1. 使用 help 模拟指令
 参考：https://qemu.gevico.online/tutorial/2026/ch2/qemu-insn/
-模拟指令过程就是仿照cube 的指令语义实现（采用 Helper 实现）：
+模拟指令过程就是仿照 cube 的指令语义实现（采用 Helper 实现）：
 ```c
 // target/riscv/helper.h
 DEF_HELPER_3(cube, void, env, tl, tl)
@@ -263,21 +263,21 @@ static bool trans_cube(DisasContext *ctx, arg_cube *a)
     return true;
 }
 ```
-需要注意的是，gen_helper_cube 函数是一个宏，会生成一个调用helper_cube 函数的TR 指令，而不是直接调用helper_cube 函数，trans_cube只是翻译作用，不会直接调用helper_cube 函数。
-gen_helper_cube 是 DEF_HELPER_3(cube, void, env, tl, tl)生成的。
+需要注意的是，gen_helper_cube 函数是一个宏，会生成一个调用 helper_cube 函数的 TR 指令，而不是直接调用 helper_cube 函数，trans_cube 只是翻译作用，不会直接调用 helper_cube 函数。
+gen_helper_cube 是 DEF_HELPER_3(cube, void, env, tl, tl) 生成的。
 这里展示下宏对应定义：
 以 `DEF_HELPER_FLAGS_4(dma, 0, void, env, tl, tl, tl)` 为例：
-DEF_HELPER_3 对应了DEF_HELPER_4(dma, void, env, tl, tl, tl)
+DEF_HELPER_3 对应了 DEF_HELPER_4(dma, void, env, tl, tl, tl)
 
 ##### 第一步：展开宏定义
-DEF_HELPER_4宏定义为
+DEF_HELPER_4 宏定义为
 ```c
 // path: include/exec/helper-head.h.inc
 #define DEF_HELPER_4(name, ret, t1, t2, t3, t4) \
     DEF_HELPER_FLAGS_4(name, 0, ret, t1, t2, t3, t4)
 ```
 
-DEF_HELPER_FLAGS_4宏定义为:
+DEF_HELPER_FLAGS_4 宏定义为：
 ```c
 #define DEF_HELPER_FLAGS_4(name, flags, ret, t1, t2, t3, t4)            \
 extern TCGHelperInfo glue(helper_info_, name);                          \
@@ -292,7 +292,7 @@ static inline void glue(gen_helper_, name)(dh_retvar_decl(ret)          \
 }
 ```
 
-那么DEF_HELPER_4(dma, void, env, tl, tl, tl)展开后就是：
+那么 DEF_HELPER_4(dma, void, env, tl, tl, tl) 展开后就是：
 ```c
 extern TCGHelperInfo helper_info_dma;
 
@@ -337,10 +337,10 @@ static inline void gen_helper_dma(
 }
 ```
 
-##### 2. 使用IR模拟指令
-使用IR 指令模拟实现了dma指令，确实实现起来比较繁琐，不如helper_XXX方便。
+##### 2. 使用 IR 模拟指令
+使用 IR 指令模拟实现了 dma 指令，确实实现起来比较繁琐，不如 helper_XXX 方便。
 
 
 ## 总结
 
-通过tcg指令模拟实验，对qemu的tcg指令模拟有了深入的理解。并且具备了自行模拟指令，使用Semihosting模式验证模拟指令正确性的能力。
+通过 tcg 指令模拟实验，对 qemu 的 tcg 指令模拟有了深入的理解。并且具备了自行模拟指令，使用 Semihosting 模式验证模拟指令正确性的能力。
